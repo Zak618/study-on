@@ -1,13 +1,16 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Edit Course{% endblock %}
+{% block title %}Редактировать: {{ course.name }}{% endblock %}
 
 {% block body %}
-    <h1>Edit Course</h1>
+    <h1 style="margin-left: 20px;">Редактировать: {{ course.name }}</h1>
+    
 
     {{ include('course/_form.html.twig', {'button_label': 'Сохранить'}) }}
 
-    <a href="{{ path('app_course_index') }}">Назад к списку</a>
+    <hr>
+
+    <a href="{{ path('app_course_index') }}" style="margin-left: 20px; margin-top: 20px;"><button type="button" class="btn btn-outline-secondary">Назад к курсу</button></a>
 
     {{ include('course/_delete_form.html.twig') }}
 {% endblock %}
