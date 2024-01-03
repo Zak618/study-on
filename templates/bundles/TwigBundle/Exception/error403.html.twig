@@ -1,0 +1,10 @@
+{# templates/bundles/TwigBundle/Exception/error403.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <h1>Доступ закрыт! 🤚</h1>
+
+    <h5>
+        У вас нет доступа к данной странице. Просим перейти на <a href="{{ path('app_course_index') }}">главную страницу</a>.
+    </h5>
+{% endblock %}
