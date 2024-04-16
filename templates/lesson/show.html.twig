@@ -5,24 +5,24 @@
 {% endblock %}
 
 {% block body %}
-	<h1 style="margin-left: 20px;">{{ lesson.name }}</h1>
+	<h1 class="ml-2">{{ lesson.name }}</h1>
 
-	<h5 style="margin-left: 20px;">Курс:
+	<h5 class="ml-2">Курс:
 		<a href="{{ path('app_course_show', { 'id': lesson.course.id }) }}" style="text-decoration: none;">{{ lesson.course.name }}</a>
 	</h5>
 
 	<hr>
 
-	<a href="{{ path('app_course_show', { 'id': lesson.course.id }) }}" style="margin-left: 20px;">
+	<a href="{{ path('app_course_show', { 'id': lesson.course.id }) }}" class="ml-2">
 		<button type="button" class="btn btn-outline-secondary">Назад к курсу</button>
 	</a>
-
+	{% if is_granted('ROLE_SUPER_ADMIN') %}
 	<a href="{{ path('app_lesson_edit', {'id': lesson.id}) }}">
 		<button type="button" class="btn btn-outline-secondary">Редактировать</button>
 	</a>
 
 	{{ include('lesson/_delete_form.html.twig') }}
-
+	{% endif %}
 	<div class="card mx-3 mt-2">
                 <div class="card-body">
                     {{ lesson.content }}

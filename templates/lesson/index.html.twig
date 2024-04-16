@@ -22,7 +22,9 @@
                 <td>{{ lesson.number }}</td>
                 <td>
                     <a href="{{ path('app_lesson_show', {'id': lesson.id}) }}">Больше</a>
+                    {% if is_granted('ROLE_SUPER_ADMIN') %}
                     <a href="{{ path('app_lesson_edit', {'id': lesson.id}) }}">Редактировать</a>
+                    {% endif %}
                 </td>
             </tr>
         {% else %}
@@ -32,6 +34,7 @@
         {% endfor %}
         </tbody>
     </table>
-
+    {% if is_granted('ROLE_SUPER_ADMIN') %}
     <a href="{{ path('app_lesson_new') }}">Создать новый</a>
+    {% endif %}
 {% endblock %}

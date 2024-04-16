@@ -1,0 +1,39 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Регистрация{% endblock %}
+
+{% block body %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="text-center mb-4">
+                <h1>Регистрация</h1>
+            </div>
+            {{ form_start(registrationForm, {'attr': {'class': 'form-horizontal'}}) }}
+                <div class="form-group">
+                    {{ form_label(registrationForm.email) }}
+                    {{ form_widget(registrationForm.email, {'attr': {'class': 'form-control'}}) }}
+                    {{ form_errors(registrationForm.email) }}
+                </div>
+                <div class="form-group">
+                    {{ form_label(registrationForm.plainPassword.first) }}
+                    {{ form_widget(registrationForm.plainPassword.first, {'attr': {'class': 'form-control'}}) }}
+                    {{ form_errors(registrationForm.plainPassword.first) }}
+                </div>
+                <div class="form-group">
+                    {{ form_label(registrationForm.plainPassword.second) }}
+                    {{ form_widget(registrationForm.plainPassword.second, {'attr': {'class': 'form-control'}}) }}
+                    {{ form_errors(registrationForm.plainPassword.second) }}
+                </div>
+                <div class="text-center">
+                    <button type="submit" class="btn btn-primary">Зарегистрироваться</button>
+                </div>
+            {{ form_end(registrationForm) }}
+            
+            {% for flashError in app.flashes('error') %}
+                <div class="alert alert-danger mt-3">{{ flashError }}</div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
