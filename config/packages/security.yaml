@@ -37,12 +37,14 @@ security:
     access_control:
         - { path: ^/(login|register), roles: PUBLIC_ACCESS }
         - { path: ^/(profile|logout), roles: IS_AUTHENTICATED_FULLY }
-        - { path: ^/(courses|lessons)/\d+$, methods: [ POST ], roles: [ ROLE_SUPER_ADMIN ] }
-        - { path: ^/lessons/\d+$, roles: [ ROLE_USER ] }
+        - { path: ^/(courses|lessons)/\d+$, methods: [ POST ], roles: [ PUBLIC_ACCESS ] }
+        - { path: ^/lessons/\d+$, roles: [ PUBLIC_ACCESS ] }
         - { path: ^/courses/new, roles: [ ROLE_SUPER_ADMIN ] }
         - { path: ^/api/v1/courses/\w+/pay, roles: PUBLIC_ACCESS }
-        - { path: ^/api/v1/transactions, roles: PUBLIC_ACCESS }
+        - { path: ^/api/v1/courses/\w+/rent, roles: PUBLIC_ACCESS }
         - { path: ^/api/v1/courses, roles: PUBLIC_ACCESS }
+        - { path: ^/api/v1/transactions, roles: PUBLIC_ACCESS }
+        - { path: ^/api/v1/deposit, roles: PUBLIC_ACCESS }
 
 when@test:
     security:

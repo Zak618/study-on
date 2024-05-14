@@ -6,32 +6,30 @@ namespace App\Tests;
 
 use Doctrine\Common\DataFixtures\Executor\ORMExecutor;
 use Doctrine\Common\DataFixtures\Loader;
+use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Doctrine\Common\DataFixtures\Purger\ORMPurger;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\DependencyInjection\ContainerAwareInterface;
 use Symfony\Component\DomCrawler\Crawler;
 use Symfony\Component\HttpFoundation\Response;
-use App\DataFixtures\AppFixtures;
+
 abstract class AbstractTest extends WebTestCase
 {
-    /** @var Client */
-    protected static $client;
+    protected static ?KernelBrowser $client = null;
 
-    protected static function getClient($reinitialize = false, array $options = [], array $server = [])
+    protected static function createTestClient(array $options = [], array $server = []): KernelBrowser
     {
-        if (!static::$client || $reinitialize) {
+        if (!static::$client) {
             static::$client = static::createClient($options, $server);
         }
-
-        // core is loaded (for tests without calling of getClient(true))
-        static::$client->getKernel()->boot();
 
         return static::$client;
     }
 
     protected function setUp(): void
     {
-        static::getClient();
+        parent::setUp(); // Это обеспечит корректную инициализацию окружения тестирования
+        self::$client = static::createTestClient();
         $this->loadFixtures($this->getFixtures());
     }
 
@@ -41,44 +39,46 @@ abstract class AbstractTest extends WebTestCase
         static::$client = null;
     }
 
-
+    /**
+     * Shortcut
+     */
+    protected static function getEntityManager()
+    {
+        return static::getContainer()->get('doctrine')->getManager();
+    }
 
     /**
      * List of fixtures for certain test
      */
     protected function getFixtures(): array
     {
-        return [
-            
-            AppFixtures::class,
-            
-        ];
+        return [];
     }
 
     /**
      * Load fixtures before test
      */
     protected function loadFixtures(array $fixtures = [])
-{
-    $loader = new Loader();
-    $container = self::$kernel->getContainer();
-    $entityManager = $container->get('doctrine')->getManager();
+    {
+        $loader = new Loader();
 
-    foreach ($fixtures as $fixture) {
-        if (!\is_object($fixture)) {
-            $fixture = new $fixture();
+        foreach ($fixtures as $fixture) {
+            if (!\is_object($fixture)) {
+                $fixture = new $fixture();
+            }
+
+            if ($fixture instanceof ContainerAwareInterface) {
+                $fixture->setContainer(static::getContainer());
+            }
+
+            $loader->addFixture($fixture);
         }
-        if ($fixture instanceof ContainerAwareInterface) {
-            $fixture->setContainer($container);
-        }
-        $loader->addFixture($fixture);
+
+        $em = static::getEntityManager();
+        $purger = new ORMPurger($em);
+        $executor = new ORMExecutor($em, $purger);
+        $executor->execute($loader->getFixtures());
     }
-
-    $purger = new ORMPurger($entityManager);
-    $executor = new ORMExecutor($entityManager, $purger);
-    $executor->execute($loader->getFixtures());
-}
-
 
     public function assertResponseOk(?Response $response = null, ?string $message = null, string $type = 'text/html')
     {

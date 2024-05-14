@@ -3,23 +3,60 @@
 {% block title %}Профиль пользователя{% endblock %}
 
 {% block body %}
-<div class="container mt-4">
-    <div class="row">
-        <div class="col-md-6 offset-md-3">
-            <div class="card">
-                <div class="card-header bg-primary text-white">
-                    <h2 class="mb-0">Профиль пользователя</h2>
+<div class="container mt-5">
+    <div class="card">
+        <div class="card-header">
+            <h1>Профиль пользователя</h1>
+        </div>
+        <div class="card-body">
+            <p><strong>Email:</strong> {{ email }}</p>
+            <p><strong>Роли:</strong> {{ roles|join(', ') }}</p>
+            <p><strong>Баланс:</strong> {{ balance }} руб.</p>
+        </div>
+    </div>
+
+    <div class="card mt-4">
+        <div class="card-header">
+            <h2>История транзакций</h2>
+        </div>
+        <div class="card-body">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Дата</th>
+                        <th>Тип</th>
+                        <th>Сумма</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for transaction in transactions %}
+                        <tr>
+                            <td>{{ transaction.created_at|date('Y-m-d H:i') }}</td>
+                            <td>{{ transaction.type }}</td>
+                            <td>{{ transaction.amount }}</td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="4" class="text-center">Нет транзакций</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card mt-4">
+        <div class="card-header">
+            <h2>Пополнение баланса</h2>
+        </div>
+        <div class="card-body">
+            <form action="{{ path('app_profile_deposit') }}" method="post" class="form-inline">
+                <div class="form-group mb-2">
+                    <label for="amount" class="sr-only">Сумма пополнения</label>
+                    <input type="number" id="amount" name="amount" class="form-control" placeholder="Сумма" required>
                 </div>
-                <div class="card-body">
-                    <p class="card-text"><strong>Email:</strong> {{ email }}</p>
-                    <p class="card-text"><strong>Роль:</strong> {{ roles|join(', ') }}</p>
-                    <p class="card-text"><strong>Баланс:</strong> {{ balance }} руб.</p>
-                    <form action="{{ path('app_logout') }}" method="post" class="d-flex justify-content-between">
-                        <input type="hidden" name="_csrf_token" value="{{ csrf_token('logout') }}">
-                        <button type="submit" class="btn btn-danger">Выход</button>
-                    </form>
-                </div>
-            </div>
+                <button type="submit" class="btn btn-primary mb-2 ml-2">Пополнить баланс</button>
+            </form>
         </div>
     </div>
 </div>

@@ -3,79 +3,59 @@
 {% block title %}Курсы{% endblock %}
 
 {% block body %}
-    <h1 class="mt-2 ml-2">Курсы</h1>
+<h1 style="margin-left: 20px;">Курсы</h1>
 
-    <div class="row">
-        {% for course in courses %}
-            <div class="col-md-6">
-                <div class="card m-2">
-                    <div class="card-body">
-                        <h5>
-                            <a href="{{ path('app_course_show', {'code': course.code}) }}" style="text-decoration:none; color:black;">{{ course.type }}</a>
-                        </h5>
-                        <p>{{ course.description|default('Описание отсутствует') }}</p>
-                        <p>Цена: {{ course.price|default('Бесплатно') }}</p>
-                        
-                        <button class="btn btn-primary buy-course" data-course-code="{{ course.code }}">Купить</button>
-                        
+<div class="row">
+    {% for course in courses %}
+        <div class="col-md-6">
+            <div class="card" style="margin: 20px;">
+                <div class="card-body">
+                    <h5>
+                        <a href="{{ path('app_course_show', {'code': course.code}) }}" style="text-decoration:none; color:black;">{{ course.name }}</a>
+                    </h5>
+                    <p>{{ course.description }}</p>
+                    <p>Тип: {{ course.type | capitalize }}</p>
                     
-                        {% if is_granted('ROLE_USER') %}
-                        <a href="{{ path('app_course_show', {'code': course.code}) }}" class="btn btn-primary">Пройти</a>
+                    {% set transaction = transactions[course.code] ?? null %}
+                    
+                    {% if transaction %}
+                        {% if transaction.type == 'payment' %}
+                            <p>Куплено</p>
+                            <a href="{{ path('app_course_show', {'code': course.code}) }}" class="btn btn-primary">Проходить курс</a>
+                        {% elseif transaction.type == 'rent' %}
+                            {% if transaction.expires_at is defined %}
+                                <p>Арендовано до: {{ transaction.expires_at|date('d-m-Y') }}</p>
+                            {% else %}
+                                <p>Арендовано, срок аренды неизвестен</p>
+                            {% endif %}
+                            <a href="{{ path('app_course_show', {'code': course.code}) }}" class="btn btn-primary">Проходить курс</a>
                         {% endif %}
-                    </div>
+                    {% else %}
+                        {% if course.type == 1 %}
+                            <p>Цена покупки: {{ course.price }} руб.</p>
+                            <form action="{{ path('app_course_buy', {'code': course.code}) }}" method="post">
+                                <input type="hidden" name="token" value="{{ token }}">
+                                <button type="submit" class="btn btn-success">Купить курс</button>
+                            </form>
+                        {% elseif course.type == 2 %}
+                            <p>Цена аренды: {{ course.price }} руб.</p>
+                            <form action="{{ path('app_course_rent', {'code': course.code}) }}" method="post">
+                                <input type="hidden" name="token" value="{{ token }}">
+                                <button type="submit" class="btn btn-info">Арендовать</button>
+                            </form>
+                        {% else %}
+                            <a href="{{ path('app_course_show', {'code': course.code}) }}" class="btn btn-primary">Бесплатный доступ</a>
+                        {% endif %}
+                    {% endif %}
                 </div>
             </div>
-        {% endfor %}
-    </div>
+        </div>
+    {% endfor %}
+</div>
 
-    <hr>
-    {% if is_granted('ROLE_SUPER_ADMIN') %}
-    <a href="{{ path('app_course_new') }}" class="ml-2">
-        <button type="button" class="btn btn-outline-secondary">Новый курс</button>
-    </a>
-    {% endif %}
+<hr>
+
+<a href="{{ path('app_course_new') }}" style="margin-left: 20px;">
+    <button type="button" class="btn btn-outline-secondary">Новый курс</button>
+</a>
 {% endblock %}
-
-{% block javascripts %}
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const userToken = "{{ userToken|e('js') }}"; 
-
-        document.querySelectorAll('.buy-course').forEach(button => {
-            button.addEventListener('click', () => {
-                const courseCode = button.getAttribute('data-course-code');
-                
-                if (!userToken) {
-                    alert('Пожалуйста, войдите в систему для совершения покупок.');
-                    return;
-                }
-
-                fetch(`/api/v1/courses/${courseCode}/pay`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': userToken, 
-                        'Content-Type': 'application/json'
-                    },
-                })
-                .then(response => {
-                    if (response.ok) {
-                        return response.json();
-                    } else if (response.status === 401) {
-                        alert('Ваша сессия истекла. Пожалуйста, войдите в систему снова.');
-                    } else {
-                        throw new Error('Произошла ошибка при оплате курса');
-                    }
-                })
-                .then(data => {
-                    alert('Курс успешно оплачен');
-                })
-                .catch(error => {
-                    console.error('Ошибка:', error);
-                    alert(error.message);
-                });
-            });
-        });
-    });
-</script>
-{% endblock %}
-

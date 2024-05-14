@@ -41,6 +41,9 @@ class BillingClient
                     'Authorization' => 'Bearer ' . $token,
                 ],
             ]);
+            // После успешного получения токена
+            $_SESSION['user_token'] = 'Bearer ' . $token;
+
             return $response->toArray();
         } catch (\Exception $e) {
             throw new BillingUnavailableException('Ошибка при получении информации о пользователе. ' . $e->getMessage());
@@ -81,32 +84,88 @@ class BillingClient
         }
     }
 
-    public function payForCourse(string $token, string $courseCode): array
+    public function payForCourse(string $courseCode, string $token): array
     {
         try {
-            $response = $this->httpClient->request('POST', $this->billingUrl . "/api/v1/courses/$courseCode/pay", [
+            // Убедитесь, что URL формируется правильно
+            $url = $this->billingUrl . "/api/v1/courses/$courseCode/pay";
+            $response = $this->httpClient->request('POST', $url, [
                 'headers' => [
-                    'Authorization' => 'Bearer ' . $token,
-                ],
+                    'Authorization' => 'Bearer ' . $token
+                ]
             ]);
+    
+            if ($response->getStatusCode() >= 400) {
+                throw new \Exception("HTTP Error: " . $response->getStatusCode() . " " . $response->getContent(false));
+            }
+    
             return $response->toArray();
         } catch (\Exception $e) {
             throw new BillingUnavailableException('Ошибка при оплате курса. ' . $e->getMessage());
         }
     }
+    
+
+
 
     public function getTransactions(string $token, array $filters = []): array
+{
+    try {
+        $response = $this->httpClient->request('GET', $this->billingUrl . '/api/v1/transactions', [
+            'headers' => [
+                'Authorization' => 'Bearer ' . $token,
+            ],
+            'query' => $filters,
+        ]);
+        return $response->toArray();
+    } catch (\Exception $e) {
+        throw new BillingUnavailableException('Ошибка при получении истории транзакций. ' . $e->getMessage());
+    }
+}
+
+
+
+    public function getUserCourses(string $token): array
     {
         try {
-            $response = $this->httpClient->request('GET', $this->billingUrl . '/api/v1/transactions', [
+            $response = $this->httpClient->request('GET', $this->billingUrl . '/api/v1/user/courses', [
                 'headers' => [
                     'Authorization' => 'Bearer ' . $token,
                 ],
-                'query' => $filters,
             ]);
-            return $response->toArray();
+
+            $data = $response->toArray();
+
+            // Обработка данных, если это необходимо, например:
+            $courses = [];
+            foreach ($data as $item) {
+                $courses[$item['code']] = [
+                    'type' => $item['type'],
+                    'expires_at' => isset($item['expires_at']) ? $item['expires_at'] : null,
+                ];
+            }
+
+            return $courses;
         } catch (\Exception $e) {
-            throw new BillingUnavailableException('Ошибка при получении истории транзакций. ' . $e->getMessage());
+            throw new BillingUnavailableException('Не удалось получить информацию о курсах пользователя.');
         }
     }
+
+    public function deposit(string $token, float $amount): array
+{
+    try {
+        $response = $this->httpClient->request('POST', $this->billingUrl . '/api/v1/deposit', [
+            'headers' => [
+                'Authorization' => 'Bearer ' . $token,
+            ],
+            'json' => [
+                'amount' => $amount,
+            ],
+        ]);
+        return $response->toArray();
+    } catch (\Exception $e) {
+        throw new BillingUnavailableException('Ошибка при пополнении баланса. ' . $e->getMessage());
+    }
+}
+
 }

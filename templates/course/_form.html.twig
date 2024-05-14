@@ -1,4 +1,18 @@
-{{ form_start(form) }}
-    {{ form_widget(form) }}
+{{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
+    <div class="form-group">
+        {{ form_label(form.code) }}
+        {{ form_widget(form.code, {'attr': {'class': 'form-control'}}) }}
+        {{ form_errors(form.code) }}
+    </div>
+    <div class="form-group">
+        {{ form_label(form.name) }}
+        {{ form_widget(form.name, {'attr': {'class': 'form-control'}}) }}
+        {{ form_errors(form.name) }}
+    </div>
+    <div class="form-group">
+        {{ form_label(form.description) }}
+        {{ form_widget(form.description, {'attr': {'class': 'form-control'}}) }}
+        {{ form_errors(form.description) }}
+    </div>
     <button class="btn btn-primary" style="margin-left: 20px; margin-top: 10px;">{{ button_label|default('Сохранить') }}</button>
 {{ form_end(form) }}

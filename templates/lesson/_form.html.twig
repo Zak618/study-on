@@ -1,4 +1,21 @@
 {{ form_start(form) }}
-    {{ form_widget(form) }}
+    <div class="form-group">
+        {{ form_label(form.name) }}
+        {{ form_widget(form.name, {'attr': {'class': 'form-control'}}) }}
+        {{ form_errors(form.name) }}
+    </div>
+    <div class="form-group">
+        {{ form_label(form.content) }}
+        {{ form_widget(form.content, {'attr': {'class': 'form-control'}}) }}
+        {{ form_errors(form.content) }}
+    </div>
+    <div class="form-group">
+        {{ form_label(form.number) }}
+        {{ form_widget(form.number, {'attr': {'class': 'form-control'}}) }}
+        {{ form_errors(form.number) }}
+    </div>
+    <div class="form-group" style="display: none;">
+        {{ form_widget(form.course) }}
+    </div>
     <button class="btn btn-outline-secondary" style="margin-left: 20px; margin-top: 10px;">{{ button_label|default('Сохранить') }}</button>
 {{ form_end(form) }}
