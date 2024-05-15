@@ -9,7 +9,7 @@
 
     <hr>
 
-    <a href="{{ path('app_course_show', { 'id': lesson.course.id }) }}" style="margin-left: 20px;"><button type="button" class="btn btn-outline-secondary">Назад к курсу</button></a>
+    <a href="{{ path('app_course_show', { 'code': lesson.course.code }) }}" style="margin-left: 20px;"><button type="button" class="btn btn-outline-secondary">Назад к курсу</button></a>
 
     {{ include('lesson/_delete_form.html.twig') }}
 {% endblock %}

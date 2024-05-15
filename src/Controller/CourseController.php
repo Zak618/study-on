@@ -6,8 +6,8 @@ use App\Entity\Course;
 use App\Entity\Lesson;
 use App\Form\CourseType;
 use App\Form\LessonType;
-use App\Repository\CourseRepository;
 use App\Repository\LessonRepository;
+use App\Repository\CourseRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -19,10 +19,12 @@ use App\Security\User;
 class CourseController extends AbstractController
 {
     private BillingClient $billingClient;
+    private LessonRepository $lessonRepository;
 
-    public function __construct(BillingClient $billingClient)
+    public function __construct(BillingClient $billingClient, LessonRepository $lessonRepository)
     {
         $this->billingClient = $billingClient;
+        $this->lessonRepository = $lessonRepository;
     }
 
     #[Route('/', name: 'app_course_index', methods: ['GET'])]
@@ -62,9 +64,17 @@ class CourseController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $existingCourse = $courseRepository->findOneBy(['name' => $course->getName()]);
+            $existingCourse = $courseRepository->findOneBy(['code' => $course->getCode()]);
             if ($existingCourse) {
-                $this->addFlash('error', 'Такое название уже есть!');
+                $this->addFlash('error', 'Курс с таким символьным кодом уже существует!');
+                return $this->redirectToRoute('app_course_new');
+            }
+
+            // Создание курса в биллинге
+            try {
+                $this->billingClient->createCourse($course);
+            } catch (\Exception $e) {
+                $this->addFlash('error', 'Ошибка при создании курса в биллинге: ' . $e->getMessage());
                 return $this->redirectToRoute('app_course_new');
             }
 
@@ -72,23 +82,45 @@ class CourseController extends AbstractController
             return $this->redirectToRoute('app_course_show', ['id' => $course->getId()], Response::HTTP_SEE_OTHER);
         }
 
-        return $this->renderForm('course/new.html.twig', [
+        return $this->render('course/new.html.twig', [
             'course' => $course,
             'form' => $form,
         ]);
     }
 
-    #[Route('/{code}', name: 'app_course_show', methods: ['GET'])]
-    public function show(string $code): Response
-    {
-        try {
-            $course = $this->billingClient->getCourse($code);
-            return $this->render('course/show.html.twig', ['course' => $course]);
-        } catch (\Exception $e) {
-            $this->addFlash('error', 'Не удалось загрузить информацию о курсе: ' . $e->getMessage());
-            return $this->redirectToRoute('app_course_index');
-        }
+
+    #[Route('/courses/{code}', name: 'app_course_show', methods: ['GET'])]
+public function show(string $code, CourseRepository $courseRepository): Response
+{
+    // Попробуем получить курс из базы данных
+    $course = $courseRepository->findOneBy(['code' => $code]);
+
+    if (!$course) {
+        // Получение информации о курсе по API
+        $courseData = $this->billingClient->getCourse($code);
+
+        // Создание объекта Course на основе данных API
+        $course = new Course();
+        $course
+            ->setCode($courseData['code'])
+            ->setTitle($courseData['title'])
+            ->setDescription($courseData['description'])
+            ->setType($courseData['type'])
+            ->setPrice($courseData['price']);
+
+        // Сохранение курса в базу данных
+        $courseRepository->save($course, true);
     }
+
+    // Получение уроков для курса
+    $lessons = $this->lessonRepository->findBy(['course' => $course]);
+
+    return $this->render('course/show.html.twig', [
+        'course' => $course,
+        'lessons' => $lessons,
+    ]);
+}
+
 
     #[Route('/{id}/edit', name: 'app_course_edit', methods: ['GET', 'POST'])]
     public function edit(Request $request, Course $course, CourseRepository $courseRepository): Response
@@ -97,12 +129,20 @@ class CourseController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            // Обновление курса в биллинге
+            try {
+                $this->billingClient->updateCourse($course);
+            } catch (\Exception $e) {
+                $this->addFlash('error', 'Ошибка при обновлении курса в биллинге: ' . $e->getMessage());
+            }
+
             $courseRepository->save($course, true);
             return $this->redirectToRoute('app_course_show', ['id' => $course->getId()], Response::HTTP_SEE_OTHER);
         }
 
-        return $this->renderForm('course/edit.html.twig', ['course' => $course, 'form' => $form]);
+        return $this->render('course/edit.html.twig', ['course' => $course, 'form' => $form]);
     }
+
 
     #[Route('/{id}', name: 'app_course_delete', methods: ['POST'])]
     public function delete(Request $request, Course $course, CourseRepository $courseRepository): Response

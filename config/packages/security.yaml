@@ -45,6 +45,8 @@ security:
         - { path: ^/api/v1/courses, roles: PUBLIC_ACCESS }
         - { path: ^/api/v1/transactions, roles: PUBLIC_ACCESS }
         - { path: ^/api/v1/deposit, roles: PUBLIC_ACCESS }
+        - { path: ^/api/v1/courses/create, roles: [ PUBLIC_ACCESS ] }
+        - { path: ^/api/v1/courses/\w+/update, roles: [ PUBLIC_ACCESS ] }
 
 when@test:
     security:

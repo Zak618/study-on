@@ -4,6 +4,7 @@ namespace App\Service;
 
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use App\Exception\BillingUnavailableException;
+use App\Entity\Course;
 
 class BillingClient
 {
@@ -94,34 +95,34 @@ class BillingClient
                     'Authorization' => 'Bearer ' . $token
                 ]
             ]);
-    
+
             if ($response->getStatusCode() >= 400) {
                 throw new \Exception("HTTP Error: " . $response->getStatusCode() . " " . $response->getContent(false));
             }
-    
+
             return $response->toArray();
         } catch (\Exception $e) {
             throw new BillingUnavailableException('Ошибка при оплате курса. ' . $e->getMessage());
         }
     }
-    
+
 
 
 
     public function getTransactions(string $token, array $filters = []): array
-{
-    try {
-        $response = $this->httpClient->request('GET', $this->billingUrl . '/api/v1/transactions', [
-            'headers' => [
-                'Authorization' => 'Bearer ' . $token,
-            ],
-            'query' => $filters,
-        ]);
-        return $response->toArray();
-    } catch (\Exception $e) {
-        throw new BillingUnavailableException('Ошибка при получении истории транзакций. ' . $e->getMessage());
+    {
+        try {
+            $response = $this->httpClient->request('GET', $this->billingUrl . '/api/v1/transactions', [
+                'headers' => [
+                    'Authorization' => 'Bearer ' . $token,
+                ],
+                'query' => $filters,
+            ]);
+            return $response->toArray();
+        } catch (\Exception $e) {
+            throw new BillingUnavailableException('Ошибка при получении истории транзакций. ' . $e->getMessage());
+        }
     }
-}
 
 
 
@@ -152,20 +153,61 @@ class BillingClient
     }
 
     public function deposit(string $token, float $amount): array
-{
-    try {
-        $response = $this->httpClient->request('POST', $this->billingUrl . '/api/v1/deposit', [
-            'headers' => [
-                'Authorization' => 'Bearer ' . $token,
-            ],
-            'json' => [
-                'amount' => $amount,
-            ],
-        ]);
-        return $response->toArray();
-    } catch (\Exception $e) {
-        throw new BillingUnavailableException('Ошибка при пополнении баланса. ' . $e->getMessage());
+    {
+        try {
+            $response = $this->httpClient->request('POST', $this->billingUrl . '/api/v1/deposit', [
+                'headers' => [
+                    'Authorization' => 'Bearer ' . $token,
+                ],
+                'json' => [
+                    'amount' => $amount,
+                ],
+            ]);
+            return $response->toArray();
+        } catch (\Exception $e) {
+            throw new BillingUnavailableException('Ошибка при пополнении баланса. ' . $e->getMessage());
+        }
     }
-}
 
+    public function createCourse(Course $course): void
+    {
+        try {
+            $response = $this->httpClient->request('POST', $this->billingUrl . '/api/v1/courses/create', [
+                'json' => [
+                    'type' => $course->getType(),
+                    'title' => $course->getTitle(),
+                    'code' => $course->getCode(),
+                    'price' => $course->getPrice(),
+                    'description' => $course->getDescription(),
+                ],
+            ]);
+
+            if ($response->getStatusCode() !== 201) {
+                throw new \Exception('Не удалось создать курс в биллинге');
+            }
+        } catch (\Exception $e) {
+            throw new BillingUnavailableException('Ошибка при создании курса в биллинге: ' . $e->getMessage());
+        }
+    }
+
+    public function updateCourse(Course $course): void
+    {
+        try {
+            $response = $this->httpClient->request('POST', $this->billingUrl . '/api/v1/courses/' . $course->getCode() . '/update', [
+                'json' => [
+                    'type' => $course->getType(),
+                    'title' => $course->getTitle(),
+                    'code' => $course->getCode(),
+                    'price' => $course->getPrice(),
+                    'description' => $course->getDescription(),
+                ],
+            ]);
+
+            if ($response->getStatusCode() !== 200) {
+                throw new \Exception('Не удалось обновить курс в биллинге');
+            }
+        } catch (\Exception $e) {
+            throw new BillingUnavailableException('Ошибка при обновлении курса в биллинге: ' . $e->getMessage());
+        }
+    }
 }

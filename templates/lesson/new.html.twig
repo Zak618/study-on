@@ -6,12 +6,12 @@
     <h1 style="margin-left: 20px;">Создание нового урока</h1>
 
     <h5 style="margin-left: 20px;">Курс:
-		<a href="{{ path('app_course_show', { 'id': lesson.course.id }) }}" style="text-decoration: none;">{{ lesson.course.name }}</a>
-	</h5>
+        <a href="{{ path('app_course_show', { 'code': lesson.course.code }) }}" style="text-decoration: none;">{{ lesson.course.title }}</a>
+    </h5>
 
     {{ include('lesson/_form.html.twig') }}
 
     <hr>
 
-    <a href="{{ path('app_course_show', { 'id' : course.id }) }}" style="margin-left: 20px;"><button type="button" class="btn btn-outline-secondary">Назад к курсу</button></a>
+    <a href="{{ path('app_course_show', { 'code' : lesson.course.code }) }}" style="margin-left: 20px;"><button type="button" class="btn btn-outline-secondary">Назад к курсу</button></a>
 {% endblock %}

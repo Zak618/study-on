@@ -1,9 +1,9 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Курс {{ course.name }}{% endblock %}
+{% block title %}Курс {{ course.title }}{% endblock %}
 
 {% block body %}
-<h1>{{ course.name }}</h1>
+<h1>{{ course.title }}</h1>
 
 <p>{{ course.description }}</p>
 
@@ -16,6 +16,50 @@
 {% else %}
     <p>Бесплатный курс</p>
 {% endif %}
+
+<hr>
+
+<h2>Уроки</h2>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Название</th>
+            <th>Контент</th>
+            <th>Номер</th>
+            <th>Действия</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for lesson in lessons %}
+            <tr>
+                <td>{{ lesson.name }}</td>
+                <td>{{ lesson.content }}</td>
+                <td>{{ lesson.number }}</td>
+                <td>
+                    <a href="{{ path('app_lesson_show', {'id': lesson.id}) }}">Больше</a>
+                    {% if is_granted('ROLE_SUPER_ADMIN') %}
+                        <a href="{{ path('app_lesson_edit', {'id': lesson.id}) }}">Редактировать</a>
+                        {{ include('lesson/_delete_form.html.twig', {'lesson': lesson}) }}
+                    {% endif %}
+                </td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="4">Нет уроков</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% if is_granted('ROLE_SUPER_ADMIN') %}
+    <a href="{{ path('app_lesson_new', {'courseCode': course.code}) }}">
+        <button type="button" class="btn btn-outline-secondary">Добавить урок</button>
+    </a>
+{% endif %}
+
+
+<hr>
 
 <a href="{{ path('app_course_index') }}" class="btn btn-primary">Назад к списку курсов</a>
 {% endblock %}

@@ -5,12 +5,6 @@
 {% block body %}
     <h1 style="margin-left: 20px;">Новый курс</h1>
 
-    {% if app.flashes('error') %}
-    <div class="alert alert-danger">
-            <span>Такое название уже есть!</span>
-    </div>
-{% endif %}
-
 
     {{ include('course/_form.html.twig') }}
 
