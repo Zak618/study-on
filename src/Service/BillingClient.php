@@ -42,7 +42,6 @@ class BillingClient
                     'Authorization' => 'Bearer ' . $token,
                 ],
             ]);
-            // После успешного получения токена
             $_SESSION['user_token'] = 'Bearer ' . $token;
 
             return $response->toArray();
@@ -88,7 +87,6 @@ class BillingClient
     public function payForCourse(string $courseCode, string $token): array
     {
         try {
-            // Убедитесь, что URL формируется правильно
             $url = $this->billingUrl . "/api/v1/courses/$courseCode/pay";
             $response = $this->httpClient->request('POST', $url, [
                 'headers' => [
@@ -137,7 +135,6 @@ class BillingClient
 
             $data = $response->toArray();
 
-            // Обработка данных, если это необходимо, например:
             $courses = [];
             foreach ($data as $item) {
                 $courses[$item['code']] = [

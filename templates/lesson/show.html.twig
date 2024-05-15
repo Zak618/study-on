@@ -5,27 +5,31 @@
 {% endblock %}
 
 {% block body %}
-    <h1 class="ml-2">{{ lesson.name }}</h1>
+    <div class="container mt-4">
+        <h1 class="display-4">{{ lesson.name }}</h1>
 
-    <h5 class="ml-2">Курс:
-        <a href="{{ path('app_course_show', { 'code': lesson.course.code }) }}" style="text-decoration: none;">{{ lesson.course.title }}</a>
-    </h5>
+        <h5 class="text-muted">Курс:
+            <a href="{{ path('app_course_show', { 'code': lesson.course.code }) }}" class="text-decoration-none text-dark">{{ lesson.course.title }}</a>
+        </h5>
 
-    <hr>
+        <hr class="my-4">
 
-    <a href="{{ path('app_course_show', { 'code': lesson.course.code }) }}" class="ml-2">
-        <button type="button" class="btn btn-outline-secondary">Назад к курсу</button>
-    </a>
-    {% if is_granted('ROLE_SUPER_ADMIN') %}
-        <a href="{{ path('app_lesson_edit', {'id': lesson.id}) }}">
-            <button type="button" class="btn btn-outline-secondary">Редактировать</button>
-        </a>
+        <div class="d-flex justify-content-between mb-4">
+            <a href="{{ path('app_course_show', { 'code': lesson.course.code }) }}">
+                <button type="button" class="btn btn-outline-primary">Назад к курсу</button>
+            </a>
+            {% if is_granted('ROLE_SUPER_ADMIN') %}
+                <div>
+                    <a href="{{ path('app_lesson_edit', {'id': lesson.id}) }}" class="btn btn-outline-secondary me-2">Редактировать</a>
+                    {{ include('lesson/_delete_form.html.twig') }}
+                </div>
+            {% endif %}
+        </div>
 
-        {{ include('lesson/_delete_form.html.twig') }}
-    {% endif %}
-    <div class="card mx-3 mt-2">
-        <div class="card-body">
-            {{ lesson.content }}
+        <div class="card shadow-sm">
+            <div class="card-body">
+                {{ lesson.content }}
+            </div>
         </div>
     </div>
 {% endblock %}

@@ -15,6 +15,7 @@ use Symfony\Component\Routing\Annotation\Route;
 use App\Service\BillingClient;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use App\Security\User;
+
 #[Route('/courses')]
 class CourseController extends AbstractController
 {
@@ -32,29 +33,30 @@ class CourseController extends AbstractController
     {
         $user = $this->getUser();
         if (!$user instanceof User) {
-            throw new \LogicException('Пользовательский объект не является экземпляром App\Security\User.');
+            return $this->redirectToRoute('app_login');
         }
+
         $apiToken = $user->getApiToken();
-    
+
         // Получаем список всех курсов
         $courses = $this->billingClient->getCourses();
-    
+
         // Получаем список транзакций пользователя
         $transactions = $this->billingClient->getTransactions($apiToken);
-    
+
         // Преобразуем список транзакций в массив с ключами по коду курса
         $transactionsByCourseCode = [];
         foreach ($transactions as $transaction) {
             $transactionsByCourseCode[$transaction['course_code']] = $transaction;
         }
-    
+
         return $this->render('course/index.html.twig', [
             'courses' => $courses,
             'transactions' => $transactionsByCourseCode,
             'token' => $apiToken,
         ]);
     }
-    
+
 
     #[Route('/new', name: 'app_course_new', methods: ['GET', 'POST'])]
     public function new(Request $request, CourseRepository $courseRepository): Response
@@ -90,36 +92,36 @@ class CourseController extends AbstractController
 
 
     #[Route('/courses/{code}', name: 'app_course_show', methods: ['GET'])]
-public function show(string $code, CourseRepository $courseRepository): Response
-{
-    // Попробуем получить курс из базы данных
-    $course = $courseRepository->findOneBy(['code' => $code]);
+    public function show(string $code, CourseRepository $courseRepository): Response
+    {
 
-    if (!$course) {
-        // Получение информации о курсе по API
-        $courseData = $this->billingClient->getCourse($code);
+        $course = $courseRepository->findOneBy(['code' => $code]);
 
-        // Создание объекта Course на основе данных API
-        $course = new Course();
-        $course
-            ->setCode($courseData['code'])
-            ->setTitle($courseData['title'])
-            ->setDescription($courseData['description'])
-            ->setType($courseData['type'])
-            ->setPrice($courseData['price']);
+        if (!$course) {
+            // Получение информации о курсе по API
+            $courseData = $this->billingClient->getCourse($code);
 
-        // Сохранение курса в базу данных
-        $courseRepository->save($course, true);
+            // Создание объекта Course на основе данных API
+            $course = new Course();
+            $course
+                ->setCode($courseData['code'])
+                ->setTitle($courseData['title'])
+                ->setDescription($courseData['description'])
+                ->setType($courseData['type'])
+                ->setPrice($courseData['price']);
+
+            // Сохранение курса в базу данных
+            $courseRepository->save($course, true);
+        }
+
+        // Получение уроков для курса
+        $lessons = $this->lessonRepository->findBy(['course' => $course]);
+
+        return $this->render('course/show.html.twig', [
+            'course' => $course,
+            'lessons' => $lessons,
+        ]);
     }
-
-    // Получение уроков для курса
-    $lessons = $this->lessonRepository->findBy(['course' => $course]);
-
-    return $this->render('course/show.html.twig', [
-        'course' => $course,
-        'lessons' => $lessons,
-    ]);
-}
 
 
     #[Route('/{id}/edit', name: 'app_course_edit', methods: ['GET', 'POST'])]
@@ -170,24 +172,23 @@ public function show(string $code, CourseRepository $courseRepository): Response
         }
         return $this->redirectToRoute('app_course_show', ['code' => $code]);
     }
-    
+
 
 
     #[Route('/{code}/rent', name: 'app_course_rent', methods: ['POST'])]
-public function rentCourse(Request $request, string $code): Response
-{
-    $token = $request->request->get('token');  // Получение токена из POST-параметров
-    try {
-        $result = $this->billingClient->payForCourse($code, $token); // Предполагается, что метод работает для аренды
-        if (isset($result['expires_at'])) {
-            $this->addFlash('success', 'Курс успешно арендован до ' . $result['expires_at']);
-        } else {
-            $this->addFlash('error', 'Не удалось арендовать курс: ' . ($result['message'] ?? 'Ошибка сервера'));
+    public function rentCourse(Request $request, string $code): Response
+    {
+        $token = $request->request->get('token');  // Получение токена из POST-параметров
+        try {
+            $result = $this->billingClient->payForCourse($code, $token);
+            if (isset($result['expires_at'])) {
+                $this->addFlash('success', 'Курс успешно арендован до ' . $result['expires_at']);
+            } else {
+                $this->addFlash('error', 'Не удалось арендовать курс: ' . ($result['message'] ?? 'Ошибка сервера'));
+            }
+        } catch (\Exception $e) {
+            $this->addFlash('error', 'Ошибка аренды курса: ' . $e->getMessage());
         }
-    } catch (\Exception $e) {
-        $this->addFlash('error', 'Ошибка аренды курса: ' . $e->getMessage());
+        return $this->redirectToRoute('app_course_show', ['code' => $code]);
     }
-    return $this->redirectToRoute('app_course_show', ['code' => $code]);
-}
-
 }

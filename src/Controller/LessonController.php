@@ -45,7 +45,8 @@ class LessonController extends AbstractController
             $lessonRepository->save($lesson, true);
 
             return $this->redirectToRoute(
-                'app_course_show', ['code' => $lesson->getCourse()->getCode()],
+                'app_course_show',
+                ['code' => $lesson->getCourse()->getCode()],
                 Response::HTTP_SEE_OTHER
             );
         }

@@ -3,63 +3,61 @@
 {% block title %}Курс {{ course.title }}{% endblock %}
 
 {% block body %}
-<h1>{{ course.title }}</h1>
 
-<p>{{ course.description }}</p>
+<div class="container">
+    <h1>{{ course.title }}</h1>
 
-<p>Тип: {{ course.type | capitalize }}</p>
+    <p>{{ course.description }}</p>
 
-{% if course.type == 1 %}
-    <p>Цена покупки: {{ course.price }} руб.</p>
-{% elseif course.type == 2 %}
-    <p>Цена аренды: {{ course.price }} руб.</p>
-{% else %}
-    <p>Бесплатный курс</p>
-{% endif %}
+    {% if course.type == 1 %}
+        <p>Цена покупки: {{ course.price }} руб.</p>
+    {% elseif course.type == 2 %}
+        <p>Цена аренды: {{ course.price }} руб.</p>
+    {% else %}
+        <p>Бесплатный курс</p>
+    {% endif %}
 
-<hr>
+    <hr>
 
-<h2>Уроки</h2>
+    <h2>Уроки</h2>
 
-<table class="table">
-    <thead>
-        <tr>
-            <th>Название</th>
-            <th>Контент</th>
-            <th>Номер</th>
-            <th>Действия</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for lesson in lessons %}
+    <table class="table">
+        <thead>
             <tr>
-                <td>{{ lesson.name }}</td>
-                <td>{{ lesson.content }}</td>
-                <td>{{ lesson.number }}</td>
-                <td>
-                    <a href="{{ path('app_lesson_show', {'id': lesson.id}) }}">Больше</a>
-                    {% if is_granted('ROLE_SUPER_ADMIN') %}
-                        <a href="{{ path('app_lesson_edit', {'id': lesson.id}) }}">Редактировать</a>
-                        {{ include('lesson/_delete_form.html.twig', {'lesson': lesson}) }}
-                    {% endif %}
-                </td>
+                <th>Название</th>
+                <th>Контент</th>
+                <th>Номер</th>
+                <th>Действия</th>
             </tr>
-        {% else %}
-            <tr>
-                <td colspan="4">Нет уроков</td>
-            </tr>
-        {% endfor %}
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+            {% for lesson in lessons %}
+                <tr>
+                    <td>{{ lesson.name }}</td>
+                    <td>{{ lesson.content }}</td>
+                    <td>{{ lesson.number }}</td>
+                    <td>
+                        <a href="{{ path('app_lesson_show', {'id': lesson.id}) }}" class="btn btn-primary"><span class="icon">🔍</span>Больше</a>
+                        {% if is_granted('ROLE_SUPER_ADMIN') %}
+                            <a href="{{ path('app_lesson_edit', {'id': lesson.id}) }}" class="btn btn-outline-secondary"><span class="icon">✏️</span>Редактировать</a>
+                            {{ include('lesson/_delete_form.html.twig', {'lesson': lesson, 'class': 'btn btn-danger'}) }}
+                        {% endif %}
+                    </td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="4">Нет уроков</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 
-{% if is_granted('ROLE_SUPER_ADMIN') %}
-    <a href="{{ path('app_lesson_new', {'courseCode': course.code}) }}">
-        <button type="button" class="btn btn-outline-secondary">Добавить урок</button>
-    </a>
-{% endif %}
+    {% if is_granted('ROLE_SUPER_ADMIN') %}
+        <a href="{{ path('app_lesson_new', {'courseCode': course.code}) }}" class="btn btn-outline-secondary"><span class="icon">➕</span>Добавить урок</a>
+    {% endif %}
 
+    <hr>
 
-<hr>
-
-<a href="{{ path('app_course_index') }}" class="btn btn-primary">Назад к списку курсов</a>
+    <a href="{{ path('app_course_index') }}" class="btn btn-primary"><span class="icon">⬅️</span>Назад к списку курсов</a>
+</div>
 {% endblock %}
