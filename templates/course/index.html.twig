@@ -3,59 +3,119 @@
 {% block title %}Курсы{% endblock %}
 
 {% block body %}
-<h1 style="margin-left: 20px;">Курсы</h1>
+<style>
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        background-color: #f8f8f8;
+        color: #333;
+    }
+    h1 {
+        font-size: 2.5em;
+        font-weight: 600;
+        margin: 40px 0;
+    }
+    .card {
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        background-color: #fff;
+        overflow: hidden;
+        transition: transform 0.3s;
+    }
+    .card:hover {
+        transform: translateY(-10px);
+    }
+    .card-body {
+        padding: 20px;
+    }
+    .card h5 {
+        font-size: 1.75em;
+        font-weight: 500;
+    }
+    .card p {
+        font-size: 1em;
+        line-height: 1.6;
+        margin-bottom: 15px;
+    }
+    .btn {
+        border-radius: 8px;
+        padding: 10px 20px;
+        font-size: 1em;
+        font-weight: 500;
+    }
+    .btn-primary {
+        background-color: #007bff;
+        border-color: #007bff;
+    }
+    .btn-success {
+        background-color: #28a745;
+        border-color: #28a745;
+    }
+    .btn-info {
+        background-color: #17a2b8;
+        border-color: #17a2b8;
+    }
+    .btn-outline-secondary {
+        color: #6c757d;
+        border-color: #6c757d;
+    }
+</style>
+<div class="container">
+    <h1>Курсы</h1>
 
-<div class="row">
-    {% for course in courses %}
-        <div class="col-md-6">
-            <div class="card" style="margin: 20px;">
-                <div class="card-body">
-                    <h5>
-                        <a href="{{ path('app_course_show', {'code': course.code}) }}" style="text-decoration:none; color:black;">{{ course.title }}</a>
-                    </h5>
-                    <p>{{ course.description }}</p>
-                    <p>Тип: {{ course.type | capitalize }}</p>
-                    
-                    {% set transaction = transactions[course.code] ?? null %}
-                    
-                    {% if transaction %}
-                        {% if transaction.type == 'payment' %}
-                            <p>Куплено</p>
-                            <a href="{{ path('app_course_show', {'code': course.code}) }}" class="btn btn-primary">Проходить курс</a>
-                        {% elseif transaction.type == 'rent' %}
-                            {% if transaction.expires_at is defined %}
-                                <p>Арендовано до: {{ transaction.expires_at|date('d-m-Y') }}</p>
-                            {% else %}
-                                <p>Арендовано, срок аренды неизвестен</p>
+    <div class="row">
+        {% for course in courses %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5>
+                            <a href="{{ path('app_course_show', {'code': course.code}) }}" style="text-decoration:none; color:black;">{{ course.title }}</a>
+                        </h5>
+                        <p>{{ course.description }}</p>
+                        
+                        {% set transaction = transactions[course.code] ?? null %}
+                        
+                        {% if transaction %}
+                            {% if transaction.type == 'payment' %}
+                                <p>Куплено</p>
+                                <a href="{{ path('app_course_show', {'code': course.code}) }}" class="btn btn-primary">Проходить курс</a>
+                            {% elseif transaction.type == 'rent' %}
+                                {% if transaction.expires_at is defined %}
+                                    <p>Арендовано до: {{ transaction.expires_at|date('d-m-Y') }}</p>
+                                {% else %}
+                                    <p>Арендовано, срок аренды неизвестен</p>
+                                {% endif %}
+                                <a href="{{ path('app_course_show', {'code': course.code}) }}" class="btn btn-primary">Проходить курс</a>
                             {% endif %}
-                            <a href="{{ path('app_course_show', {'code': course.code}) }}" class="btn btn-primary">Проходить курс</a>
-                        {% endif %}
-                    {% else %}
-                        {% if course.type == 1 %}
-                            <p>Цена покупки: {{ course.price }} руб.</p>
-                            <form action="{{ path('app_course_buy', {'code': course.code}) }}" method="post">
-                                <input type="hidden" name="token" value="{{ token }}">
-                                <button type="submit" class="btn btn-success">Купить курс</button>
-                            </form>
-                        {% elseif course.type == 2 %}
-                            <p>Цена аренды: {{ course.price }} руб.</p>
-                            <form action="{{ path('app_course_rent', {'code': course.code}) }}" method="post">
-                                <input type="hidden" name="token" value="{{ token }}">
-                                <button type="submit" class="btn btn-info">Арендовать</button>
-                            </form>
                         {% else %}
-                            <a href="{{ path('app_course_show', {'code': course.code}) }}" class="btn btn-primary">Бесплатный доступ</a>
+                            {% if course.type == 1 %}
+                                <p>Цена покупки: {{ course.price }} руб.</p>
+                                <form action="{{ path('app_course_buy', {'code': course.code}) }}" method="post">
+                                    <input type="hidden" name="token" value="{{ token }}">
+                                    <button type="submit" class="btn btn-success">Купить курс</button>
+                                </form>
+                            {% elseif course.type == 2 %}
+                                <p>Цена аренды: {{ course.price }} руб.</p>
+                                <form action="{{ path('app_course_rent', {'code': course.code}) }}" method="post">
+                                    <input type="hidden" name="token" value="{{ token }}">
+                                    <button type="submit" class="btn btn-info">Арендовать</button>
+                                </form>
+                            {% else %}
+                                <a href="{{ path('app_course_show', {'code': course.code}) }}" class="btn btn-primary">Бесплатный доступ</a>
+                            {% endif %}
                         {% endif %}
-                    {% endif %}
+                    </div>
                 </div>
             </div>
-        </div>
-    {% endfor %}
+        {% endfor %}
+    </div>
+
+    <hr>
+
+    <div class="d-flex justify-content-center">
+        <a href="{{ path('app_course_new') }}">
+            <button type="button" class="btn btn-outline-secondary">Новый курс</button>
+        </a>
+    </div>
 </div>
-
-<hr>
-
-<a href="{{ path('app_course_new') }}" style="margin-left: 20px;">
-    <button type="button" class="btn btn-outline-secondary">Новый курс</button>
-</a>
 {% endblock %}

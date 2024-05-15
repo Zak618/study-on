@@ -79,7 +79,7 @@ class CourseController extends AbstractController
             }
 
             $courseRepository->save($course, true);
-            return $this->redirectToRoute('app_course_show', ['id' => $course->getId()], Response::HTTP_SEE_OTHER);
+            return $this->redirectToRoute('app_course_show', ['code' => $course->getCode()], Response::HTTP_SEE_OTHER);
         }
 
         return $this->render('course/new.html.twig', [

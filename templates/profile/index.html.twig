@@ -4,9 +4,10 @@
 
 {% block body %}
 <div class="container mt-5">
-    <div class="card">
-        <div class="card-header">
-            <h1>Профиль пользователя</h1>
+    <div class="card shadow-lg animate__animated animate__fadeInUp">
+        <div class="card-header bg-primary text-white d-flex align-items-center">
+            <i class="fas fa-user-circle fa-2x mr-3"></i>
+            <h1 class="mb-0">Профиль пользователя</h1>
         </div>
         <div class="card-body">
             <p><strong>Email:</strong> {{ email }}</p>
@@ -15,12 +16,13 @@
         </div>
     </div>
 
-    <div class="card mt-4">
-        <div class="card-header">
-            <h2>История транзакций</h2>
+    <div class="card mt-4 shadow-lg animate__animated animate__fadeInUp animate__delay-1s history-card">
+        <div class="card-header d-flex align-items-center" style="background-color: orange; color: white">
+            <i class="fas fa-history fa-2x mr-3"></i>
+            <h2 class="mb-0">История транзакций</h2>
         </div>
         <div class="card-body">
-            <table class="table table-striped">
+            <table class="table table-striped table-hover">
                 <thead>
                     <tr>
                         <th>Дата</th>
@@ -30,14 +32,32 @@
                 </thead>
                 <tbody>
                     {% for transaction in transactions %}
+                        {% set month = {
+                            'January': 'января',
+                            'February': 'февраля',
+                            'March': 'марта',
+                            'April': 'апреля',
+                            'May': 'мая',
+                            'June': 'июня',
+                            'July': 'июля',
+                            'August': 'августа',
+                            'September': 'сентября',
+                            'October': 'октября',
+                            'November': 'ноября',
+                            'December': 'декабря'
+                        }[transaction.created_at|date('F')] %}
                         <tr>
-                            <td>{{ transaction.created_at|date('Y-m-d H:i') }}</td>
+                            <td>
+                                <span class="date-badge" style="display: inline-block; background: #FFA500; color: white; padding: 0.5rem 1rem; border-radius: 1rem; text-align: center; font-weight: bold; white-space: nowrap;">
+                                    {{ transaction.created_at|date('d') }} {{ month }} {{ transaction.created_at|date('Y') }}
+                                </span>
+                            </td>
                             <td>{{ transaction.type }}</td>
-                            <td>{{ transaction.amount }}</td>
+                            <td>{{ transaction.amount }} рублей</td>
                         </tr>
                     {% else %}
                         <tr>
-                            <td colspan="4" class="text-center">Нет транзакций</td>
+                            <td colspan="3" class="text-center">Нет транзакций</td>
                         </tr>
                     {% endfor %}
                 </tbody>
@@ -45,17 +65,18 @@
         </div>
     </div>
 
-    <div class="card mt-4">
-        <div class="card-header">
-            <h2>Пополнение баланса</h2>
+    <div class="card mt-4 shadow-lg animate__animated animate__fadeInUp animate__delay-2s">
+        <div class="card-header bg-success text-white d-flex align-items-center">
+            <i class="fas fa-wallet fa-2x mr-3"></i>
+            <h2 class="mb-0">Пополнение баланса</h2>
         </div>
         <div class="card-body">
             <form action="{{ path('app_profile_deposit') }}" method="post" class="form-inline">
-                <div class="form-group mb-2">
+                <div class="form-group mb-2 mr-3">
                     <label for="amount" class="sr-only">Сумма пополнения</label>
                     <input type="number" id="amount" name="amount" class="form-control" placeholder="Сумма" required>
                 </div>
-                <button type="submit" class="btn btn-primary mb-2 ml-2">Пополнить баланс</button>
+                <button type="submit" class="btn btn-outline-success mb-2">Пополнить баланс</button>
             </form>
         </div>
     </div>
