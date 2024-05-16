@@ -19,6 +19,14 @@ class PaymentController extends AbstractController
         return $this->json(['error' => 'Token not provided or invalid'], Response::HTTP_UNAUTHORIZED);
     }
     $token = str_replace('Bearer ', '', $token);
+
+    // Здесь надо внимательно, может быть ошибка!!!
+    try {
+        $paymentResult = $billingClient->payForCourse($code, $token);
+    } catch (\Exception $e) {
+        return $this->json(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+    }
+
     $paymentResult = $billingClient->payForCourse($code, $token);
     if (isset($paymentResult['error'])) {
         return $this->json(['error' => $paymentResult['error']], Response::HTTP_BAD_REQUEST);
