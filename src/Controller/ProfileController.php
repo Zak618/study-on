@@ -5,20 +5,12 @@ namespace App\Controller;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Contracts\HttpClient\HttpClientInterface;
 use App\Security\User;
 use App\Service\BillingClient;
 use Symfony\Component\HttpFoundation\Request;
 
 class ProfileController extends AbstractController
 {
-    private $httpClient;
-
-    public function __construct(HttpClientInterface $httpClient)
-    {
-        $this->httpClient = $httpClient;
-    }
-
     #[Route('/profile', name: 'app_profile')]
     public function index(BillingClient $billingClient): Response
     {
@@ -28,23 +20,16 @@ class ProfileController extends AbstractController
             throw new \LogicException('Пользовательский объект не является экземпляром App\Security\User.');
         }
 
-        $apiToken = $user->getApiToken(); 
+        $apiToken = $user->getApiToken();
 
-        $response = $this->httpClient->request('GET', 'http://billing.study-on.local/api/v1/users/current', [
-            'headers' => [
-                'Authorization' => 'Bearer ' . $apiToken,
-            ],
-        ]);
-
-        $data = $response->toArray(); 
-        $balance = $data['balance'] ?? 0;
-
-        // Получаем историю транзакций
         try {
+            $userInfo = $billingClient->getUserInfo($apiToken);
+            $balance = $userInfo['balance'] ?? 0;
             $transactions = $billingClient->getTransactions($apiToken);
         } catch (\Exception $e) {
+            $balance = 0;
             $transactions = [];
-            $this->addFlash('error', 'Ошибка при получении истории транзакций: ' . $e->getMessage());
+            $this->addFlash('error', 'Ошибка при получении данных: ' . $e->getMessage());
         }
 
         return $this->render('profile/index.html.twig', [
@@ -67,13 +52,12 @@ class ProfileController extends AbstractController
         $apiToken = $user->getApiToken();
 
         try {
-            $result = $billingClient->deposit($apiToken, (float)$amount);
+            $billingClient->deposit($apiToken, (float)$amount);
             $this->addFlash('success', 'Баланс успешно пополнен.');
-            return $this->redirectToRoute('app_profile');
         } catch (\Exception $e) {
             $this->addFlash('error', 'Ошибка при пополнении баланса: ' . $e->getMessage());
-            return $this->redirectToRoute('app_profile');
         }
-    }
 
+        return $this->redirectToRoute('app_profile');
+    }
 }

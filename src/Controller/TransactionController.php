@@ -20,7 +20,7 @@ class TransactionController extends AbstractController
             return $this->json(['error' => 'Authentication required'], Response::HTTP_UNAUTHORIZED);
         }
 
-        $filters = $request->query->all(); // Получаем фильтры из запроса, если они есть
+        $filters = $request->query->all();
         $transactions = $billingClient->getTransactions($userToken, $filters);
 
         if (isset($transactions['error'])) {

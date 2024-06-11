@@ -11,17 +11,15 @@ class BillingClientMock extends BillingClient
 {
     public function __construct()
     {
-        // Используем MockHttpClient для создания заглушки HTTP-клиента
-        $httpClient = new MockHttpClient(new MockResponse(json_encode([])));
-        $billingUrl = 'http://fake-billing-url.com'; // Пример URL, можно использовать любой
-
-        // Вызываем конструктор базового класса с моковыми параметрами
+        $httpClient = new MockHttpClient([
+            new MockResponse(json_encode([]), ['http_code' => 200])
+        ]);
+        $billingUrl = 'http://fake-billing-url.com';
         parent::__construct($httpClient, $billingUrl, $httpClient);
     }
 
     public function authorize(string $username, string $password): array
     {
-        // Симуляция авторизации пользователя
         if ($username === 'user@example.com' && $password === 'password123') {
             return [
                 'token' => 'user_fake_token',
@@ -39,11 +37,10 @@ class BillingClientMock extends BillingClient
 
     public function register(string $email, string $password): array
     {
-        // Симуляция регистрации пользователя
-        // Возвращаем данные в зависимости от ввода (можете добавить логику проверки существующих пользователей)
         if ($email !== 'user@example.com' && $email !== 'admin@example.com') {
             return [
                 'email' => $email,
+                'password' => $password,
                 'roles' => ['ROLE_USER'],
                 'token' => 'new_user_fake_token',
                 'refresh_token' => 'new_user_refresh_token'
@@ -55,7 +52,6 @@ class BillingClientMock extends BillingClient
 
     public function getUserInfo(string $token): array
     {
-        // Симуляция получения информации о пользователе
         if ($token === 'user_fake_token') {
             return [
                 'email' => 'user@example.com',
@@ -75,7 +71,6 @@ class BillingClientMock extends BillingClient
 
     public function refreshToken(string $refreshToken): array
     {
-        // Симуляция обновления токена
         if ($refreshToken === 'user_refresh_token') {
             return [
                 'token' => 'new_user_fake_token',
@@ -91,3 +86,4 @@ class BillingClientMock extends BillingClient
         }
     }
 }
+

@@ -13,25 +13,18 @@ class PaymentController extends AbstractController
 {
     #[Route('/api/v1/courses/{code}/pay', name: 'pay_for_course', methods: ['POST'])]
     public function payForCourse(BillingClient $billingClient, Request $request, string $code): JsonResponse
-{
-    $token = $request->headers->get('Authorization');
-    if (!$token || !str_starts_with($token, 'Bearer ')) {
-        return $this->json(['error' => 'Token not provided or invalid'], Response::HTTP_UNAUTHORIZED);
-    }
-    $token = str_replace('Bearer ', '', $token);
+    {
+        $token = $request->headers->get('Authorization');
+        if (!$token || !str_starts_with($token, 'Bearer ')) {
+            return $this->json(['error' => 'Token not provided or invalid'], Response::HTTP_UNAUTHORIZED);
+        }
+        $token = str_replace('Bearer ', '', $token);
 
-    // Здесь надо внимательно, может быть ошибка!!!
-    try {
-        $paymentResult = $billingClient->payForCourse($code, $token);
-    } catch (\Exception $e) {
-        return $this->json(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        try {
+            $paymentResult = $billingClient->payForCourse($code, $token);
+            return $this->json($paymentResult);
+        } catch (\Exception $e) {
+            return $this->json(['error' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
+        }
     }
-
-    $paymentResult = $billingClient->payForCourse($code, $token);
-    if (isset($paymentResult['error'])) {
-        return $this->json(['error' => $paymentResult['error']], Response::HTTP_BAD_REQUEST);
-    }
-    return $this->json($paymentResult);
-}
-
 }

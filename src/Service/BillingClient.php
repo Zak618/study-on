@@ -12,17 +12,17 @@ class BillingClient
     private string $billingUrl;
     private HttpClientInterface $httpClient;
 
-    public function __construct(HttpClientInterface $client, string $billingUrl, HttpClientInterface $httpClient)
+    public function __construct(HttpClientInterface $client, HttpClientInterface $httpClient)
     {
         $this->client = $client;
-        $this->billingUrl = $billingUrl;
+        $this->billingUrl = $_ENV['BILLING_BASE_URL'];
         $this->httpClient = $httpClient;
     }
 
     public function authorize(string $username, string $password): array
     {
         try {
-            $response = $this->httpClient->request('POST', $this->billingUrl . '/api/v1/auth', [
+            $response = $this->httpClient->request('POST', $this->billingUrl . $_ENV['BILLING_AUTH_PATH'], [
                 'json' => [
                     'username' => $username,
                     'password' => $password,
@@ -34,16 +34,32 @@ class BillingClient
         }
     }
 
+    public function register(string $email, string $password): void
+    {
+        try {
+            $response = $this->httpClient->request('POST', $this->billingUrl . $_ENV['BILLING_REGISTER_PATH'], [
+                'json' => [
+                    'email' => $email,
+                    'password' => $password,
+                ],
+            ]);
+
+            if ($response->getStatusCode() !== 201) {
+                throw new \Exception('Не удалось зарегистрировать пользователя');
+            }
+        } catch (\Exception $e) {
+            throw new BillingUnavailableException('Ошибка при регистрации пользователя. ' . $e->getMessage());
+        }
+    }
+
     public function getUserInfo(string $token): array
     {
         try {
-            $response = $this->httpClient->request('GET', $this->billingUrl . '/api/v1/users/current', [
+            $response = $this->httpClient->request('GET', $this->billingUrl . $_ENV['BILLING_USER_INFO_PATH'], [
                 'headers' => [
                     'Authorization' => 'Bearer ' . $token,
                 ],
             ]);
-            $_SESSION['user_token'] = 'Bearer ' . $token;
-
             return $response->toArray();
         } catch (\Exception $e) {
             throw new BillingUnavailableException('Ошибка при получении информации о пользователе. ' . $e->getMessage());
@@ -53,7 +69,7 @@ class BillingClient
     public function refreshToken(string $refreshToken): array
     {
         try {
-            $response = $this->httpClient->request('POST', $this->billingUrl . '/api/v1/token/refresh', [
+            $response = $this->httpClient->request('POST', $this->billingUrl . $_ENV['BILLING_REFRESH_TOKEN_PATH'], [
                 'json' => [
                     'refresh_token' => $refreshToken,
                 ],
@@ -67,7 +83,7 @@ class BillingClient
     public function getCourses(): array
     {
         try {
-            $response = $this->httpClient->request('GET', $this->billingUrl . '/api/v1/courses');
+            $response = $this->httpClient->request('GET', $this->billingUrl . $_ENV['BILLING_COURSES_PATH']);
             return $response->toArray();
         } catch (\Exception $e) {
             throw new BillingUnavailableException('Ошибка при получении списка курсов. ' . $e->getMessage());
@@ -77,7 +93,7 @@ class BillingClient
     public function getCourse(string $code): array
     {
         try {
-            $response = $this->httpClient->request('GET', $this->billingUrl . "/api/v1/courses/$code");
+            $response = $this->httpClient->request('GET', $this->billingUrl . sprintf($_ENV['BILLING_COURSES_PATH'] . '/%s', $code));
             return $response->toArray();
         } catch (\Exception $e) {
             throw new BillingUnavailableException('Ошибка при получении информации о курсе. ' . $e->getMessage());
@@ -87,7 +103,7 @@ class BillingClient
     public function payForCourse(string $courseCode, string $token): array
     {
         try {
-            $url = $this->billingUrl . "/api/v1/courses/$courseCode/pay";
+            $url = $this->billingUrl . sprintf($_ENV['BILLING_PAY_COURSE_PATH'], $courseCode);
             $response = $this->httpClient->request('POST', $url, [
                 'headers' => [
                     'Authorization' => 'Bearer ' . $token
@@ -104,13 +120,10 @@ class BillingClient
         }
     }
 
-
-
-
     public function getTransactions(string $token, array $filters = []): array
     {
         try {
-            $response = $this->httpClient->request('GET', $this->billingUrl . '/api/v1/transactions', [
+            $response = $this->httpClient->request('GET', $this->billingUrl . $_ENV['BILLING_TRANSACTIONS_PATH'], [
                 'headers' => [
                     'Authorization' => 'Bearer ' . $token,
                 ],
@@ -122,12 +135,10 @@ class BillingClient
         }
     }
 
-
-
     public function getUserCourses(string $token): array
     {
         try {
-            $response = $this->httpClient->request('GET', $this->billingUrl . '/api/v1/user/courses', [
+            $response = $this->httpClient->request('GET', $this->billingUrl . $_ENV['BILLING_USER_COURSES_PATH'], [
                 'headers' => [
                     'Authorization' => 'Bearer ' . $token,
                 ],
@@ -152,7 +163,7 @@ class BillingClient
     public function deposit(string $token, float $amount): array
     {
         try {
-            $response = $this->httpClient->request('POST', $this->billingUrl . '/api/v1/deposit', [
+            $response = $this->httpClient->request('POST', $this->billingUrl . $_ENV['BILLING_DEPOSIT_PATH'], [
                 'headers' => [
                     'Authorization' => 'Bearer ' . $token,
                 ],
@@ -169,7 +180,7 @@ class BillingClient
     public function createCourse(Course $course): void
     {
         try {
-            $response = $this->httpClient->request('POST', $this->billingUrl . '/api/v1/courses/create', [
+            $response = $this->httpClient->request('POST', $this->billingUrl . $_ENV['BILLING_CREATE_COURSE_PATH'], [
                 'json' => [
                     'type' => $course->getType(),
                     'title' => $course->getTitle(),
@@ -190,7 +201,7 @@ class BillingClient
     public function updateCourse(Course $course): void
     {
         try {
-            $response = $this->httpClient->request('POST', $this->billingUrl . '/api/v1/courses/' . $course->getCode() . '/update', [
+            $response = $this->httpClient->request('POST', $this->billingUrl . sprintf($_ENV['BILLING_UPDATE_COURSE_PATH'], $course->getCode()), [
                 'json' => [
                     'type' => $course->getType(),
                     'title' => $course->getTitle(),
